@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik
+    command: -c /traefik.toml --logLevel=DEBUG
+    ports:
+      - "80:80"
+      - "81:8080"
+    # networks:
+    #   - traefik
+    volumes:
+      - ./traefik.toml:/traefik.toml
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.enable=false"
+
+  whoami1:
+    image: jwilder/whoami
+    ports:
+      - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=whoami"
+      - "traefik.frontend.rule=Host:whoami.localhost"
+      # - "traefik.frontend.rule=Host:localhost;Path:/"
+
+  auth:
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=auth"
+      - "traefik.frontend.rule=Host:auth.localhost"
+    
+
+  # whoami2:
+  #   image: jwilder/whoami
+  #   ports:
+  #     - 8000
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.backend=authserver"
+  #     - "traefik.frontend.rule=Host:auth.localhost"
+
+  # traefik-forward-auth:
+  #   image: thomseddon/traefik-forward-auth
+  #   environment:
+  #     - CLIENT_ID=your-client-id
+  #     - CLIENT_SECRET=your-client-secret
+  #     - SECRET=something-random
+  #     - COOKIE_SECURE=false
+  #     - DOMAIN=yourcompany.com
+  #   networks:
+  #     - traefik
+  #   labels:
+  #     - traefik.backend=traefik-forward-auth
+  #     - traefik.frontend.rule=Host:auth.localhost
+
+# networks:
+#   traefik:

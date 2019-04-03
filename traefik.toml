@@ -1,0 +1,59 @@
+
+# Use to get lots of information about why a path isn't working as expected
+logLevel = "DEBUG"
+
+[accessLog]
+dashboard = true
+
+
+################################################################
+# API and dashboard configuration
+################################################################
+[api]
+
+################################################################
+# File based
+################################################################
+# [file]
+# directory = "/etc/traefik/rules.d/"
+# watch = true
+
+
+# [consulCatalog]
+# endpoint = "192.168.32.4:8500"
+# trace = true
+# prefix = "traefik"
+# frontEndRule = "Host:localhost;PathStrip:/{{.ServiceName}}"
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+watch = true
+domain = "docker.localhost"
+
+
+
+defaultEntryPoints = ["http", "https"]
+[entryPoints]
+  [entryPoints.http]
+    address = ":80"
+    
+    [entryPoints.http.auth]
+    headerField = "Authorization"
+      # ...
+      # To enable forward auth on an entrypoint
+      [entryPoints.http.auth.forward]
+      address = "http://auth:3000/health"
+
+      # Trust existing X-Forwarded-* headers.
+      # Useful with another reverse proxy in front of Traefik.
+      #
+      # Optional
+      # Default: false
+      #
+      trustForwardHeader = true
+
+      # Copy headers from the authentication server to the request.
+      #
+      # Optional
+      #
+      # authResponseHeaders = ["X-Auth-User", "X-Secret", "X-Forwarded-User"]
