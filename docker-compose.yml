@@ -6,6 +6,7 @@ services:
     command: -c /traefik.toml --logLevel=DEBUG
     ports:
       - "80:80"
+      - "79:79" # for Auth
       - "81:8080"
     # networks:
     #   - traefik
@@ -23,7 +24,7 @@ services:
       - "traefik.enable=true"
       - "traefik.backend=whoami"
       - "traefik.frontend.rule=Host:whoami.localhost"
-      # - "traefik.frontend.rule=Host:localhost;Path:/"
+      - "traefik.frontend.entryPoints=http"
 
   auth:
     build:
@@ -34,6 +35,8 @@ services:
       - "traefik.enable=true"
       - "traefik.backend=auth"
       - "traefik.frontend.rule=Host:auth.localhost"
+      - "traefik.frontend.entryPoints=authentication"
+      
     
 
   # whoami2:

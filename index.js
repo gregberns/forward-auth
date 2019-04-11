@@ -13,6 +13,7 @@ app = require('express')();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(require('cors')());
+app.disable('x-powered-by');
 
 var auth = new LdapAuth(settings.ldap);
 
@@ -20,6 +21,7 @@ app.set('jwtTokenSecret', settings.jwt.secret);
 
 var authenticate = function (username, password) {
 	return new Promise(function (resolve, reject) {
+		// Hardcode credentials for now
     if (username === "admin") {
       resolve({
         uid: "123",
@@ -94,6 +96,55 @@ app.post('/auth', function (req, res) {
 			res.status(400).send({error: 'No username or password supplied'});
 		}
 })
+
+app.get('/verify', function (req, res) {
+	console.log('AuthHeader', req.headers.authorization)
+	
+	if (!req.headers.authorization) {
+		res.status(400).send({ error: 'Authorization Header is missing'});
+		return;
+	}
+
+	const [bearer, token] = req.headers.authorization.split(' ');
+	// req.headers.authorization.split(' ')[0]
+	if (bearer !== 'Bearer') {
+		res.status(400).send({ error: 'Authorization Header does not contain Bearer token'});
+		return;
+	}
+
+	if (!token) {
+		res.status(400).send({ error: 'Authorization Header Access token is missing'});
+		return;
+	}
+
+	var decoded = null;
+	try {
+		decoded = jwt.decode(token, app.get('jwtTokenSecret'));
+	} catch (err) {
+		res.status(400).send({ error: 'Invalid Access Token. Could not be decoded.'});
+		return;
+	}
+
+	if (decoded.exp <= parseInt(moment().format("X"))) {
+		res.status(400).send({ error: 'Access token has expired'});
+	} else {
+		res.status(200).send();
+	}
+
+});
+
+
+// app.get('/verify', function (req, res) {
+// 	console.log('/verify called')
+// 	if (req.headers.authorization 
+// 		&& req.headers.authorization.split(' ')[0] === 'Bearer') {
+// 		console.log('Verify Auth Successful')
+// 		res.json({success: true});
+// 	} else {
+// 		console.log('Verify Failed')
+// 		res.status(401).send()
+// 	}
+// })
 
 var port = (process.env.PORT || 3000);
 app.listen(port, function() {
