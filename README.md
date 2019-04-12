@@ -2,10 +2,42 @@
 
 ## Purpose
 
+Exploring ways to configure authentication in a microservices architecture. Specifically, using a reverse proxy to ensure all incoming application requests contain valid authentication tokens.
+
+## Contents of Repo
+
 Simple set of services to illustrate:
 
-* Routing Auth requests to an auth server, which authenticates with LDAP
-* Validating API requests have a valid auth header token
+* Auth requests are forwarded to an auth server, which authenticates request and returns an auth token
+* API requests have a valid auth header token before being forwarded to an application server
+
+This example uses [Traefik](http://traefik.io) as the front end to route auth requests to the auth server and API requests to the application server, first checking for a valid token.
+
+## Request Flow
+
+There are two parts to the request flow. 
+
+First, a user authenticates with the auth endpoint (port 79 in the examples below). If successful a JWT token is returned. 
+
+Second, the client sends a request to the Application endpoint (port 80 in the examples below), including the JWT token. Assuming the token is valid, the request will be forwarded to the application server and the server will respond accordingly.
+
+**Request Auth Token**
+
+* Make request to Auth endpoint, with credentials
+* Reverse Proxy forwards to Auth Server
+* Auth server validates or rejects credentials
+* Reverse Proxy returns Auth response
+
+**Use Auth Token**
+
+* Make request to Application with Auth Token
+* Reverse Proxy forwards request to Auth Server
+* Auth server validates or rejects token
+* Reverse Proxy forwards successful auth requests to Application Server, returns failed auth response to client
+* Application server processes requests, returns response
+* Reverse Proxy returns application response
+
+![Authentication Sequence](./docs/AuthenticationSequence.png)
 
 ## Attribution and Resources
 
@@ -15,13 +47,25 @@ Simple set of services to illustrate:
 
 ## Additional Research
 
-* Hookup LDAP
+* Configure LDAP authentication
 * Handle JWT Expiration
+* Token Management (https://gist.github.com/soulmachine/b368ce7292ddd7f91c15accccc02b8df)
+  * 'Extend' a token
+  * Revoke token
 * Look at "authorization code flow"
   * https://openid.net/connect/
   * https://openid.net/specs/openid-connect-core-1_0.html#CodeFlowAuth
 * Redirect HTTP traffic to HTTPS
   * Allow dev workflow without HTTPS
+
+## Concerns
+
+* Ensure Auth server is:
+  * Robust and Secure
+  * Libraries do not have vulnerabilities
+* How to prevent/monitor for suspicious activity
+* JWT Token Secret will need to be available on all application servers for validating tokens
+  * Or use Public/Private keys, where only Auth server has private and application servers have public keys
 
 ## Example Requests
 

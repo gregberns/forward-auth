@@ -1,0 +1,20 @@
+title Authentication Sequence
+
+Client->Reverse-Proxy: Auth Request
+Reverse-Proxy->+Auth-Server: Auth Request
+alt 200
+    Auth-Server->-Client: JWT Auth Token
+else 401
+    Auth-Server-->-Client: Auth Failed
+end
+
+Client->Reverse-Proxy: Application Request
+Reverse-Proxy->+Auth-Server: Validate JWT Token
+
+alt 200
+    Auth-Server->-Reverse-Proxy: Is Valid Token
+    Reverse-Proxy->+Application-Server: Application Request
+    Application-Server->-Client: Application Response
+else 401
+    Auth-Server-->-Client: Invalid Token
+end
