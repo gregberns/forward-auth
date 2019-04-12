@@ -1,4 +1,4 @@
-# Forward Authentication + LDAP Authentication Example
+# Forward Authentication Example
 
 ## Purpose
 
