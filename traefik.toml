@@ -14,31 +14,31 @@ defaultEntryPoints = ["http", "https"]
 
 [entryPoints]
 
-  # For incoming authentication requests
-  [entryPoints.authentication]
-    address = ":79"
+  # # For incoming authentication requests
+  # [entryPoints.authentication]
+  #   address = ":79"
 
   # For all API requests that need to be authenticated
   [entryPoints.http]
     address = ":80"
     
-    [entryPoints.http.auth]
-    headerField = "Authorization"
-      # ...
-      # To enable forward auth on an entrypoint
-      [entryPoints.http.auth.forward]
-      address = "http://auth:3000/verify"
+    # [entryPoints.http.auth]
+    # headerField = "Authorization"
+    #   # ...
+    #   # To enable forward auth on an entrypoint
+    #   [entryPoints.http.auth.forward]
+    #   address = "http://auth:3000/verify"
 
-      # Trust existing X-Forwarded-* headers.
-      # Useful with another reverse proxy in front of Traefik.
-      #
-      # Optional
-      # Default: false
-      #
-      trustForwardHeader = true
+    #   # Trust existing X-Forwarded-* headers.
+    #   # Useful with another reverse proxy in front of Traefik.
+    #   #
+    #   # Optional
+    #   # Default: false
+    #   #
+    #   trustForwardHeader = true
 
-      # Copy headers from the authentication server to the request.
-      #
-      # Optional
-      #
-      authResponseHeaders = ["X-Auth-User", "X-Secret", "X-Forwarded-User"]
+    #   # Copy headers from the authentication server to the request.
+    #   #
+    #   # Optional
+    #   #
+    #   authResponseHeaders = ["X-Auth-User", "X-Secret", "X-Forwarded-User"]
