@@ -79,16 +79,12 @@ services:
       - auth
     labels:
       - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
-      # - "traefik.http.routers.auth.middlewares=auth-stripprefix"
-      # - "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth"
       - "traefik.http.services.auth.loadbalancer.server.port=8080"
     deploy:
       mode: replicated
       replicas: 1
       labels:
         - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
-        # - "traefik.http.routers.auth.middlewares=auth-stripprefix"
-        # - "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth"
         - "traefik.http.services.auth.loadbalancer.server.port=8080"
 
   ldap:
