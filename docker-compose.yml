@@ -4,7 +4,6 @@ services:
   reverse-proxy:
     image: traefik:v2.1
     command: --api.insecure=true --providers.docker --log.level=DEBUG
-    # command: --configFile=/traefik.toml --logLevel=DEBUG
     ports:
       - "80:80"
       - "81:8080"
@@ -12,10 +11,7 @@ services:
       - api
       - auth
     volumes:
-      # - ./traefik.toml:/traefik.toml
       - /var/run/docker.sock:/var/run/docker.sock
-    # deploy:
-    #   constraint=node.role==manager
 
   svc1:
     build:
@@ -27,34 +23,28 @@ services:
       - api
     labels:
       - "traefik.http.routers.svc1.rule=PathPrefix(`/svc1/`)"
-      # - "traefik.http.routers.svc1.middlewares=svc1-stripprefix, svc1-forwardauth, svc1-forwardauth-trust"
-      - "traefik.http.routers.svc1.middlewares=svc1-stripprefix, svc1-forwardauth"
+      - "traefik.http.routers.svc1.middlewares=svc1-stripprefix, svc1-forwardauth-address, svc1-forwardauth-trust"
       - "traefik.http.middlewares.svc1-stripprefix.stripprefix.prefixes=/svc1"
-      - "traefik.http.middlewares.svc1-forwardauth.forwardauth.address=http://eas:8889/verify?config_token=tsUdAn%2FpNXvl58Uon2IzBS%2FZdbKZnQzXMlgba9f6ZbDAmz1CJqXLscmXN9bJze27bkP30K5FpW4EKiOaEHjM%2BFpJ3zTS%2FDh93jTqGsRCBv2A1h%2B0Q7ieEfaWIHeDwpWADlU%2BOQ2bxBvl443T%2BAJ7erbvAgFRT3uSQOVhE1JXYYQs72U0IdsWphqz6tzsWUswBnGC6dV2zgb2omF2DHo6a11qN51aNGpdJhMKOugxTnA%2BgPAb%2BCMZDNFqr6Tc0MxJagX6dsoRYC0rBWez4%2F%2BR54U3Y3bU1ckS%2FFIjmXcLzGZFvUif6Da5sD6wjbwdaX8BukL905aoc8M%2F4NKi%2ByULkMCrUwFFekaJugoMXamDsuXGeQqNs2%2B9agPNf93U1jDdAspgWHPC25cM2ElftJJv%2Fw1Ls2S8qd83km280rZBPPc5t8SG4tTaJPphlGC1yMIEL4s%2Bho5T73G0YBfbh4gycmPImzNtZ08x9EdYimqYssHaegGRjtntqcIfqV0LYs5ymPlW%2F55gt1IR1wgQvSmiI4zu4qo7kCYDP4Xt0wgIyLI65MP2KzIL8gsXE4qruvoFMDkew5OWuxxTq3zS4Wd6VlK%2Bxoc3ZrxXzVZf4r5uVeEL1NCNzDux5PPVJaFKPO9fWBHzuRHhq4lEjwNnSwQ3rrupoNa%2BIPiK2lZ%2FeHdAVTT267MvLw77oi6G%2FFnRAoh4Xs1MA%2BlLzLXPnNVrRexiZgZxgYTWKKRP7rcuHf6iRzePwpr%2FyD73fEau3EgalAqPEWNSAFfY5NzC93Xd5Fj0Tg6zhQRY806el2QGcWR%2BBY6blmujcxzGXpqVVeuC0QYa51%2FWgNRzXBs97OX6tW9sRRL27yBPu8vuU1864nNGGrzvt78Di7My74TwhV73eJgYqeeyGxmLFPiHC3UxHsJ%2FherAP7Eq4kJnA9kLBT22kVE66BT3TBMKQ9VlOJHGRnkfl%2FIlepuWPrNE%2BNTAn%2F7NlW%2FjFbxE9kB3ngED4l4LYLAAg6aSaznED0eNw1mG5oW2Eh1qXOFTodwhExMkjFGvPnOThlnokcOPWYopNNg5s%2FQS66rhaRly%2FnG6WvZOnuldlNB50Dy2MNqm7Q84LD4M6rufHq1EzJXaoDHxGLOBWUJDlXZtOiXArw84Oimz1WlRDhdmtCQpY2l1CokNWzwZSsMGVwldQDrvqc0TZ7qPIr8t8JTXH9xFkaDLT%2B2zP1XolYfHiN8Hi8NPn%2FdBsA%2F9pfuo4090k3wngVSImYqPmTlN9lPUYjyWexWkg%2BZBcmhg8MRhXngEYKQea3vK2ERR56YPt7vK3og7KjUmsP0frHSG0m%2F4qlN34Uq81GDCEAfS%2BZOf%2BIS8KDwpWN0j6KlazA%3D%3D"
-      # - "traefik.http.middlewares.svc1-forwardauth-trust.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.svc1-forwardauth-address.forwardauth.address=http://auth-svc:3000/verify"
+      - "traefik.http.middlewares.svc1-forwardauth-trust.forwardauth.trustForwardHeader=false"
+      # - "traefik.http.middlewares.svc1-forwardauth-headers.forwardauth.authResponseHeaders=X-Injected-UserInfo"
       - "traefik.http.services.svc1.loadbalancer.server.port=3000"
 
-      # https://github.com/thomseddon/traefik-forward-auth/issues/14#issuecomment-492892030
-
-  eas:
+  auth-svc:
     build:
-      context: ./external-auth-server
+      context: ./auth-svc
       dockerfile: ./Dockerfile
     ports:
-      - "8889:8889"
+      - "8889:3000"
     environment:
-      - EAS_CONFIG_TOKEN_SIGN_SECRET=foo
-      - EAS_CONFIG_TOKEN_ENCRYPT_SECRET=bar
-      - EAS_ISSUER_SIGN_SECRET=supersecret
-      - EAS_ISSUER_ENCRYPT_SECRET=blah
-      - EAS_COOKIE_SIGN_SECRET=helloworld
-      - EAS_COOKIE_ENCRYPT_SECRET=something
-      - EAS_SESSION_ENCRYPT_SECRET=baz
-      - EAS_CONFIG_TOKEN_STORE='{}'
-      - EAS_LOG_LEVEL=info
-      - EAS_PORT=8889
+      - JWT_SECRET_PATH=/run/secrets/jwt_secret_token
     networks:
       - auth
+    secrets:
+      - jwt_secret_token
+    secrets:
+      - source: jwt_secret_token
+        target: jwt_secret_token
 
   keycloak:
     image: jboss/keycloak:6.0.1
@@ -87,14 +77,6 @@ services:
         - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
         - "traefik.http.services.auth.loadbalancer.server.port=8080"
 
-  ldap:
-    image: rroemhild/test-openldap
-    ports:
-      - "389:389"
-      - "636:636"
-    networks:
-      - auth
-
   keycloak-db:
     image: postgres:11.1-alpine
     ports:
@@ -106,11 +88,21 @@ services:
     networks:
       - auth
 
+  ldap:
+    image: rroemhild/test-openldap
+    ports:
+      - "389:389"
+      - "636:636"
+    networks:
+      - auth
+
 secrets:
   keycloak_user:
     file: ./keycloak_user_file.txt
   keycloak_password:
     file: ./keycloak_password_file.txt
+  jwt_secret_token:
+    file: ./auth-svc-data/jwt-secret.txt
 
 networks:
   auth:
